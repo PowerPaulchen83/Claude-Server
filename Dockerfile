@@ -52,7 +52,13 @@ ENV HOME=/config \
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY notschluessel.sh /usr/local/bin/notschluessel
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/notschluessel
+COPY gesund.sh /usr/local/bin/gesund
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/notschluessel /usr/local/bin/gesund
+
+# Unraid zeigt damit "healthy"/"unhealthy" im Docker-Tab.
+# start-period: Zeit fuer die Erstinstallation von Claude beim allerersten Start.
+HEALTHCHECK --interval=60s --timeout=10s --start-period=5m --retries=3 \
+    CMD ["/usr/local/bin/gesund"]
 
 WORKDIR /workspace
 USER 99:100

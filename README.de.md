@@ -30,6 +30,7 @@ Claude Code als **Dauerdienst auf einem Unraid-Server**. Man spricht per
   Danach **aktualisiert sich Claude Code selbst**. Dafür braucht es kein neues Image.
 - Er startet `claude remote-control` in einer Schleife. Bricht die Verbindung ab, startet er nach 60 s neu.
 - Anmeldung, Einstellungen und Gedächtnis liegen in `/config` (appdata), **nie im Image**.
+- Eine **Gesundheitsprüfung** läuft alle 60 s: Unraid zeigt den Container als *healthy*, solange Remote Control läuft, und nach etwa 3 Minuten ohne als *unhealthy*.
 - Das Image selbst enthält nur Debian (`stable-slim`) und ein paar Werkzeuge:
   git, ripgrep, curl, jq, ssh-Client, python3, ping, dig, nc, ip, less, file, unzip.
 
@@ -134,6 +135,7 @@ Wenn das Netz anders ist, die Container-Variable `NOTSCHLUESSEL_FROM` setzen.
 | `Dockerfile` | Bauanleitung für das Image |
 | `entrypoint.sh` | Startskript: Installation, Anmeldeprüfung, Remote-Control-Schleife |
 | `notschluessel.sh` | erzeugt bzw. zeigt den SSH-Notschlüssel (im Image als `notschluessel`) |
+| `gesund.sh` | Gesundheitsprüfung (im Image als `gesund`) |
 | `neu-bauen.sh` | Notweg: Image auf dem Unraid selbst bauen |
 | `.github/workflows/bauen.yml` | GitHub baut und veröffentlicht das Image |
 | `CHANGELOG.de.md` | was sich wann geändert hat (englisch: `CHANGELOG.md`) |
@@ -146,6 +148,7 @@ Wenn das Netz anders ist, die Container-Variable `NOTSCHLUESSEL_FROM` setzen.
 | `/config ist nicht beschreibbar` | `chown -R 99:100 /mnt/user/appdata/claude-server` |
 | `login expired` | `docker exec -it Claude-Server claude` → `/login` |
 | `Remote Control beendet … Neustart in 60 s` | meist kurz kein Netz, er startet von selbst neu |
+| Docker-Tab zeigt *unhealthy* | `docker exec Claude-Server gesund` aufrufen: `nicht angemeldet` = [Erste Anmeldung](#erste-anmeldung) durchführen; `Remote Control laeuft nicht` = Log ansehen |
 | Unraid zeigt bei Update „not available“ | Ist das GitHub-Paket öffentlich? (GitHub → Packages → claude-server → Package settings) |
 
 ## Lizenz

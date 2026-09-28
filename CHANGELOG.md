@@ -3,6 +3,7 @@
 🇬🇧 **English** · 🇩🇪 [Deutsch](CHANGELOG.de.md)
 
 ## 2026-09-28
+- Health check: Unraid shows *healthy*/*unhealthy* (`gesund`, every 60 s, 3 retries, 5 min start period).
 - Documentation now in English (`README.md`, `CHANGELOG.md`) and German (`README.de.md`, `CHANGELOG.de.md`).
 - Documentation-only changes no longer trigger an image rebuild.
 
