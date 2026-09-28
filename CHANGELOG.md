@@ -3,6 +3,7 @@
 🇬🇧 **English** · 🇩🇪 [Deutsch](CHANGELOG.de.md)
 
 ## 2026-09-28
+- Container watchdog: notifications are optional (`MELDEN`, `ENTWARNUNG`); everything is always written to the system log.
 - `unraid/container-waechter.sh`: optional watchdog for the Unraid host (unhealthy / stopped autostart containers → Unraid notifications, German or English).
 - Health check: Unraid shows *healthy*/*unhealthy* (`gesund`, every 60 s, 3 retries, 5 min start period).
 - Documentation now in English (`README.md`, `CHANGELOG.md`) and German (`README.de.md`, `CHANGELOG.de.md`).

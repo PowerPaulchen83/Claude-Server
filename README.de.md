@@ -141,7 +141,19 @@ und noch eine, wenn alles wieder in Ordnung ist. Gemeldet wird erst, wenn das Pr
 hintereinander besteht (ca. 10 Min.). Kurze Unterbrechungen wie das Appdata-Backup bleiben so still.
 
 **Einrichten:** Settings → User Scripts → Add New Script → Inhalt der Datei einfügen →
-Zeitplan **Custom** `*/5 * * * *`. Die Meldungen sind deutsch; oben `SPRACHE="en"` setzen für Englisch.
+Zeitplan **Custom** `*/5 * * * *`.
+
+**Einstellungen** (oben im Skript):
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| `SPRACHE` | `de` | `en` für englische Meldungen |
+| `MELDEN` | `ja` | `nein` = **keine Benachrichtigungen**, nur ein Eintrag im Unraid-Systemprotokoll |
+| `ENTWARNUNG` | `ja` | `nein` = keine „wieder in Ordnung“-Meldung, nur Probleme |
+| `SCHWELLE` | `2` | wie viele Läufe (je 5 Min.) ein Problem bestehen muss, bevor gemeldet wird |
+
+Ob eine Meldung per Telegram, E-Mail oder nur im Browser ankommt, stellst du in Unraid unter
+**Settings → Notifications** pro Stufe ein (der Wächter nutzt *Warnung* für Probleme und *Hinweis* für „wieder in Ordnung“).
 
 Beispiel:
 ```

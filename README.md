@@ -144,7 +144,19 @@ and one more message when everything is back to normal. It only alerts after the
 for 2 runs in a row (about 10 min), so short interruptions such as the appdata backup stay quiet.
 
 **Setup:** Settings → User Scripts → Add New Script → paste the file content →
-schedule **Custom** `*/5 * * * *`. Messages are German by default; set `SPRACHE="en"` at the top for English.
+schedule **Custom** `*/5 * * * *`.
+
+**Options** (at the top of the script):
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `SPRACHE` | `de` | `en` for English messages |
+| `MELDEN` | `ja` | `nein` (no) = **no notifications**, only a line in the Unraid system log |
+| `ENTWARNUNG` | `ja` | `nein` (no) = no "back to normal" message, only problems |
+| `SCHWELLE` | `2` | how many runs in a row (5 min each) a problem must last before it is reported |
+
+Whether a notification reaches you via Telegram, e-mail or only in the browser is set in Unraid under
+**Settings → Notifications** per level (the watchdog uses *warning* for problems and *notice* for "back to normal").
 
 Example:
 ```

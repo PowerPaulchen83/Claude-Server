@@ -3,6 +3,7 @@
 🇬🇧 [English](CHANGELOG.md) · 🇩🇪 **Deutsch**
 
 ## 2026-09-28
+- Container-Wächter: Benachrichtigungen abschaltbar (`MELDEN`, `ENTWARNUNG`); alles wird immer ins Systemprotokoll geschrieben.
 - `unraid/container-waechter.sh`: optionaler Wächter für den Unraid-Host (ungesunde bzw. gestoppte Autostart-Container → Unraid-Benachrichtigungen, deutsch oder englisch).
 - Gesundheitsprüfung: Unraid zeigt *healthy*/*unhealthy* (`gesund`, alle 60 s, 3 Versuche, 5 Min. Anlaufzeit).
 - Doku jetzt auf Englisch (`README.md`, `CHANGELOG.md`) und Deutsch (`README.de.md`, `CHANGELOG.de.md`).

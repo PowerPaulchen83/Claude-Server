@@ -12,11 +12,23 @@
 # (Standard 2 = ca. 10 Min.). Kurze Unterbrechungen wie das Appdata-Backup
 # loesen so keinen Alarm aus. Jedes Problem wird nur einmal gemeldet.
 #
+# Einstellungen oben: MELDEN=nein schaltet die Benachrichtigungen ab (nur syslog),
+# ENTWARNUNG=nein unterdrueckt die "wieder in Ordnung"-Meldung. Ob Unraid eine
+# Meldung per Telegram, E-Mail oder im Browser zeigt, stellt man in Unraid unter
+# Settings -> Notifications pro Stufe ein (Warnungen / Hinweise).
+#
 # Runs on the Unraid host (User Scripts, schedule every 5 minutes).
 # Reports unhealthy containers and autostart containers that are not running
 # via Unraid notifications, plus one "back to normal" message. SPRACHE=en for English.
+# MELDEN=nein (no) = syslog only, ENTWARNUNG=nein (no) = no "back to normal" message.
+# Which channels (Telegram, e-mail, browser) are used is set in Unraid under
+# Settings -> Notifications per level (warnings / notices).
 
 SPRACHE="de"      # de = Deutsch, en = English
+MELDEN="ja"       # ja = Unraid-Benachrichtigung (Telegram/E-Mail/Browser, je nach Unraid-Einstellung)
+                  # nein = nur ins Systemprotokoll (syslog) schreiben, keine Benachrichtigung
+                  # yes/ja = send Unraid notification, no/nein = syslog only
+ENTWARNUNG="ja"   # ja = auch "wieder in Ordnung" melden, nein = nur Probleme / yes/no: also send "back to normal"
 SCHWELLE=2        # Laeufe in Folge, bevor gemeldet wird / runs in a row before alerting
 INTERVALL=5       # Minuten zwischen den Laeufen / minutes between runs (only for the text)
 
@@ -27,7 +39,13 @@ SERVER=$(hostname)
 
 t() { if [ "$SPRACHE" = "en" ]; then printf '%s' "$2"; else printf '%s' "$1"; fi; }
 
+ja() { case "$1" in ja|yes|j|y|1|true) return 0;; *) return 1;; esac; }
+
 melden() {  # $1=Stufe (warning|normal) $2=Betreff $3=Text
+    # Immer ins Systemprotokoll / always to syslog
+    logger -t container-waechter "$2 - $3"
+    [ "$1" = "normal" ] && ! ja "$ENTWARNUNG" && return 0
+    ja "$MELDEN" || return 0
     "$NOTIFY" -e "$(t Container-Waechter 'Container watchdog')" -s "$2" -d "$3" -i "$1"
 }
 
