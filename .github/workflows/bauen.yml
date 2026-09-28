@@ -6,10 +6,11 @@ name: Image bauen
 on:
   push:
     branches: [main]
-    # Reine Doku-Aenderungen bauen kein neues Image.
+    # Reine Doku-Aenderungen und Unraid-Skripte bauen kein neues Image.
     paths-ignore:
       - "**.md"
       - "LICENSE"
+      - "unraid/**"
   schedule:
     - cron: "0 3 1 * *"
   workflow_dispatch:

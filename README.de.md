@@ -19,6 +19,7 @@ Claude Code als **Dauerdienst auf einem Unraid-Server**. Man spricht per
 - [Erste Anmeldung](#erste-anmeldung)
 - [Updates](#updates)
 - [SSH-Notschlüssel](#ssh-notschlüssel)
+- [Container-Wächter (optional)](#container-wächter-optional)
 - [Dateien in diesem Projekt](#dateien-in-diesem-projekt)
 - [Fehlersuche](#fehlersuche)
 
@@ -128,6 +129,26 @@ den Schlüssel gerade freigeschaltet hat**.
 `from="…"` bedeutet, dass der Schlüssel nur aus dem Docker-Netz gilt (Standard `172.17.0.0/16`).
 Wenn das Netz anders ist, die Container-Variable `NOTSCHLUESSEL_FROM` setzen.
 
+## Container-Wächter (optional)
+
+`unraid/container-waechter.sh` ist ein kleines Skript für den **Unraid-Host** (nicht für den Container).
+Es schickt über die normalen Unraid-Benachrichtigungen (z. B. Telegram, E-Mail) eine Nachricht, wenn
+
+- ein Container mit Gesundheitsprüfung **unhealthy** wird (z. B. dieser hier) oder
+- ein Container mit **Unraid-Autostart** nicht läuft,
+
+und noch eine, wenn alles wieder in Ordnung ist. Gemeldet wird erst, wenn das Problem 2 Läufe
+hintereinander besteht (ca. 10 Min.). Kurze Unterbrechungen wie das Appdata-Backup bleiben so still.
+
+**Einrichten:** Settings → User Scripts → Add New Script → Inhalt der Datei einfügen →
+Zeitplan **Custom** `*/5 * * * *`. Die Meldungen sind deutsch; oben `SPRACHE="en"` setzen für Englisch.
+
+Beispiel:
+```
+⚠️ PowerServer: Claude-Server ist ungesund
+Seit ca. 10 Min. ungesund. Prüfung meldet: krank: Remote Control laeuft nicht
+```
+
 ## Dateien in diesem Projekt
 
 | Datei | Zweck |
@@ -136,6 +157,7 @@ Wenn das Netz anders ist, die Container-Variable `NOTSCHLUESSEL_FROM` setzen.
 | `entrypoint.sh` | Startskript: Installation, Anmeldeprüfung, Remote-Control-Schleife |
 | `notschluessel.sh` | erzeugt bzw. zeigt den SSH-Notschlüssel (im Image als `notschluessel`) |
 | `gesund.sh` | Gesundheitsprüfung (im Image als `gesund`) |
+| `unraid/container-waechter.sh` | optionaler Wächter für den Unraid-Host, siehe [Container-Wächter](#container-wächter-optional) |
 | `neu-bauen.sh` | Notweg: Image auf dem Unraid selbst bauen |
 | `.github/workflows/bauen.yml` | GitHub baut und veröffentlicht das Image |
 | `CHANGELOG.de.md` | was sich wann geändert hat (englisch: `CHANGELOG.md`) |

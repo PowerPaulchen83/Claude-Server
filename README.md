@@ -22,6 +22,7 @@ Claude Code as an **always-on service on an Unraid server**. You talk to it via
 - [First login](#first-login)
 - [Updates](#updates)
 - [SSH emergency key](#ssh-emergency-key)
+- [Container watchdog (optional)](#container-watchdog-optional)
 - [Files in this project](#files-in-this-project)
 - [Troubleshooting](#troubleshooting)
 
@@ -131,6 +132,26 @@ has the key unlocked**.
 `from="…"` means the key only works from the Docker network (default `172.17.0.0/16`).
 If your network differs, set the container variable `NOTSCHLUESSEL_FROM`.
 
+## Container watchdog (optional)
+
+`unraid/container-waechter.sh` is a small script for the **Unraid host** (not for the container).
+It sends a message through the normal Unraid notifications (e.g. Telegram, e-mail) when
+
+- a container with a health check becomes **unhealthy** (e.g. this one), or
+- a container with **Unraid autostart** is not running,
+
+and one more message when everything is back to normal. It only alerts after the problem has lasted
+for 2 runs in a row (about 10 min), so short interruptions such as the appdata backup stay quiet.
+
+**Setup:** Settings → User Scripts → Add New Script → paste the file content →
+schedule **Custom** `*/5 * * * *`. Messages are German by default; set `SPRACHE="en"` at the top for English.
+
+Example:
+```
+⚠️ PowerServer: Claude-Server is unhealthy
+Unhealthy for about 10 min. Check says: krank: Remote Control laeuft nicht
+```
+
 ## Files in this project
 
 | File | Purpose |
@@ -139,6 +160,7 @@ If your network differs, set the container variable `NOTSCHLUESSEL_FROM`.
 | `entrypoint.sh` | start script: installation, login check, Remote Control loop |
 | `notschluessel.sh` | creates/shows the SSH emergency key (in the image as `notschluessel`) |
 | `gesund.sh` | health check (in the image as `gesund`) |
+| `unraid/container-waechter.sh` | optional watchdog for the Unraid host, see [Container watchdog](#container-watchdog-optional) |
 | `neu-bauen.sh` | fallback: build the image on the Unraid server |
 | `.github/workflows/bauen.yml` | GitHub builds and publishes the image |
 | `CHANGELOG.md` | what changed when (German: `CHANGELOG.de.md`) |
