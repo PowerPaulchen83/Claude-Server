@@ -1,151 +1,156 @@
 # claude-server
 
-Claude Code als **Dauerdienst auf einem Unraid-Server**. Man spricht per
-[Remote Control](https://code.claude.com/docs/en/remote-control) mit ihm, vom Handy
-(Claude-App) oder von claude.ai/code aus. Er läuft rund um die Uhr, ohne offenes Terminal.
+🇬🇧 **English** · 🇩🇪 [Deutsch](README.de.md)
 
-> Privates Hobbyprojekt, ohne Gewähr. Lies den Abschnitt [Sicherheit](#sicherheit),
-> bevor du es nutzt.
+Claude Code as an **always-on service on an Unraid server**. You talk to it via
+[Remote Control](https://code.claude.com/docs/en/remote-control) from your phone
+(Claude app) or from claude.ai/code. It runs around the clock without an open terminal.
+
+> Private hobby project, no warranty. Read the [Security](#security) section
+> before using it.
+>
+> Log messages and helper scripts are in German. The troubleshooting table below
+> lists the German log lines with their meaning.
 
 ---
 
-## Inhalt
+## Contents
 
-- [Was der Container macht](#was-der-container-macht)
-- [Sicherheit](#sicherheit)
-- [Installation auf Unraid](#installation-auf-unraid)
-- [Erste Anmeldung](#erste-anmeldung)
+- [What the container does](#what-the-container-does)
+- [Security](#security)
+- [Installation on Unraid](#installation-on-unraid)
+- [First login](#first-login)
 - [Updates](#updates)
-- [SSH-Notschlüssel](#ssh-notschlüssel)
-- [Dateien in diesem Projekt](#dateien-in-diesem-projekt)
-- [Fehlersuche](#fehlersuche)
+- [SSH emergency key](#ssh-emergency-key)
+- [Files in this project](#files-in-this-project)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## Was der Container macht
+## What the container does
 
-- Beim ersten Start installiert er Claude Code über den offiziellen Installer nach `/config/.local`.
-  Danach **aktualisiert sich Claude Code selbst**. Dafür braucht es kein neues Image.
-- Er startet `claude remote-control` in einer Schleife. Bricht die Verbindung ab, startet er nach 60 s neu.
-- Anmeldung, Einstellungen und Gedächtnis liegen in `/config` (appdata), **nie im Image**.
-- Das Image selbst enthält nur Debian (`stable-slim`) und ein paar Werkzeuge:
-  git, ripgrep, curl, jq, ssh-Client, python3, ping, dig, nc, ip, less, file, unzip.
+- On first start it installs Claude Code with the official installer into `/config/.local`.
+  After that, **Claude Code updates itself**. No new image is needed for that.
+- It runs `claude remote-control` in a loop. If the connection drops, it restarts after 60 s.
+- Login, settings and memory live in `/config` (appdata), **never in the image**.
+- The image itself only contains Debian (`stable-slim`) and a few tools:
+  git, ripgrep, curl, jq, ssh client, python3, ping, dig, nc, ip, less, file, unzip.
 
-## Sicherheit
+## Security
 
-Grundsatz: **Claude darf wenig. Mehr gibt es nur, wenn der Besitzer es ausdrücklich freischaltet.**
+Principle: **Claude may do little. More is only possible when the owner explicitly unlocks it.**
 
-| Was | Wie hier gelöst |
+| What | How it is handled here |
 |---|---|
-| Rückfragen | Läuft **ohne** `--dangerously-skip-permissions`. Jede Änderung muss am Handy bestätigt werden. |
-| Benutzer | Läuft als `99:100` (Unraid `nobody:users`), nicht als root. |
-| Docker | **Kein** Docker-Socket. Wer den Socket hat, ist praktisch root auf dem Server, auch wenn er „nur lesend“ eingebunden ist. |
-| Dateien | Nur `/config` (appdata des Containers) und `/workspace` (ein Arbeitsordner). Keine weiteren Shares. |
-| Ports | Keine. Remote Control baut nur eine Verbindung **nach außen** zu Anthropic auf. |
-| Zugangsdaten | Nichts davon steht im Image oder in diesem Projekt. Die Anmeldung liegt in `/config/.credentials.json`. |
-| SSH | Eigener Schlüssel pro Installation, **normalerweise nicht aktiv** (siehe [SSH-Notschlüssel](#ssh-notschlüssel)). |
+| Confirmations | Runs **without** `--dangerously-skip-permissions`. Every change has to be approved on the phone. |
+| User | Runs as `99:100` (Unraid `nobody:users`), not as root. |
+| Docker | **No** Docker socket. Whoever has the socket is effectively root on the server, even if it is mounted "read-only". |
+| Files | Only `/config` (the container's appdata) and `/workspace` (one working folder). No other shares. |
+| Ports | None. Remote Control only opens an **outbound** connection to Anthropic. |
+| Credentials | None of them are in the image or in this project. The login is stored in `/config/.credentials.json`. |
+| SSH | Own key per installation, **normally not active** (see [SSH emergency key](#ssh-emergency-key)). |
 
-Zum Server-Zugriff nutzt Claude MCP-Server (z. B. einen Unraid-MCP im Nur-lesen-Modus), die in
-`/config` eingerichtet werden. Die gehören nicht zu diesem Projekt.
+For server access Claude uses MCP servers (e.g. an Unraid MCP in read-only mode) that are
+configured in `/config`. They are not part of this project.
 
-**Empfehlungen:** Zwei-Faktor-Anmeldung für das Claude-Konto einschalten und appdata sichern.
+**Recommendations:** Enable two-factor authentication for your Claude account and back up appdata.
 
-## Installation auf Unraid
+## Installation on Unraid
 
-1. Ordner anlegen (Unraid-Terminal):
+1. Create the folder (Unraid terminal):
    ```bash
    mkdir -p /mnt/user/appdata/claude-server
    chown 99:100 /mnt/user/appdata/claude-server
    ```
 2. **Docker → Add Container**:
 
-   | Feld | Wert |
+   | Field | Value |
    |---|---|
    | Name | `Claude-Server` |
    | Repository | `ghcr.io/powerpaulchen83/claude-server:latest` |
    | Network Type | `bridge` |
-   | Pfad `/config` | `/mnt/user/appdata/claude-server` (rw) |
-   | Pfad `/workspace` | ein Arbeitsordner, z. B. `/mnt/user/…/Claude` (rw) |
-   | Extra Parameters | *(leer)* |
+   | Path `/config` | `/mnt/user/appdata/claude-server` (rw) |
+   | Path `/workspace` | a working folder, e.g. `/mnt/user/…/Claude` (rw) |
+   | Extra Parameters | *(empty)* |
 
-3. **Apply**. Im Log steht danach „Noch nicht angemeldet …“. Das ist beim ersten Start richtig so.
+3. **Apply**. The log will then say „Noch nicht angemeldet …“ (not logged in yet). That is expected on first start.
 
-## Erste Anmeldung
+## First login
 
-Einmalig im Unraid-Terminal:
+Once, in the Unraid terminal:
 
 ```bash
 docker exec -it Claude-Server claude
 ```
-1. `/login` eingeben, den Link am PC öffnen, den Code einfügen.
-2. Dem Ordner `/workspace` vertrauen, dann `/exit`.
+1. Type `/login`, open the link on your PC, paste the code.
+2. Trust the folder `/workspace`, then `/exit`.
 
 ```bash
 docker exec -it Claude-Server claude remote-control
 ```
-3. Die Frage „Enable Remote Control? (y/n)“ mit `y` beantworten, dann `Strg+C`.
-4. Container neu starten. Die Sitzungen erscheinen in der Claude-App mit dem Namen `server-…`.
+3. Answer „Enable Remote Control? (y/n)“ with `y`, then press `Ctrl+C`.
+4. Restart the container. Sessions appear in the Claude app with the name `server-…`.
 
 ## Updates
 
-Es gibt **zwei Teile**, die sich getrennt aktualisieren:
+There are **two parts** that update separately:
 
-| Teil | Wie |
+| Part | How |
 |---|---|
-| Claude Code | automatisch, von selbst |
-| Image (Debian + Werkzeuge) | GitHub baut es **am 1. jeden Monats** neu (und bei jeder Änderung). Danach zeigt Unraid im Docker-Tab ein Update an, ein Klick auf **Update** genügt. |
+| Claude Code | automatically, by itself |
+| Image (Debian + tools) | GitHub rebuilds it **on the 1st of every month** (and on every change except pure documentation). Unraid then shows an update in the Docker tab; one click on **Update** is enough. |
 
-Neu bauen von Hand: Auf GitHub unter **Actions → Image bauen → Run workflow**.
+Manual rebuild: on GitHub under **Actions → Image bauen → Run workflow**.
 
-> **Achtung:** Wenn sich im Projekt 60 Tage lang nichts ändert, pausiert GitHub den
-> Monatsplan und schickt eine Mail. Dann unter **Actions → Image bauen → Enable workflow** wieder einschalten.
+> **Note:** If nothing changes in the project for 60 days, GitHub pauses the monthly
+> schedule and sends an email. Re-enable it under **Actions → Image bauen → Enable workflow**.
 
-**Notweg ohne GitHub:** Auf dem Unraid selbst bauen:
+**Fallback without GitHub:** build on the Unraid server itself:
 ```bash
-bash "/pfad/zu/diesem/ordner/neu-bauen.sh"
+bash "/path/to/this/folder/neu-bauen.sh"
 ```
-Danach im Docker-Tab: Container → **Edit → Apply**.
+Then in the Docker tab: container → **Edit → Apply**.
 
-## SSH-Notschlüssel
+## SSH emergency key
 
-Für echte Notfälle kann Claude per SSH auf den Unraid-Host, **aber nur, wenn der Besitzer
-den Schlüssel gerade freigeschaltet hat**.
+For real emergencies Claude can reach the Unraid host via SSH, **but only while the owner
+has the key unlocked**.
 
-- **Jede Installation erzeugt ihren eigenen Schlüssel.** Im Image und in diesem Projekt ist
-  **kein** Schlüssel enthalten. Einen Standard-Schlüssel gibt es nicht.
-- Der geheime Teil bleibt in `/config/.ssh/`. Er verlässt den Container nie.
+- **Every installation generates its own key.** There is **no** key in the image or in this
+  project. There is no default key.
+- The private part stays in `/config/.ssh/` and never leaves the container.
 
-**Ablauf im Notfall**
-1. Im Container `notschluessel` aufrufen. Beim ersten Mal wird der Schlüssel erzeugt, danach wird nur die Zeile angezeigt.
-2. Die ausgegebene Zeile (beginnt mit `from="…"`) in Unraid unter
-   **Users → root → SSH authorized keys** eintragen.
-3. Claude erledigt die eine Aufgabe, **jeder Befehl nach Rückfrage**.
-4. **Die Zeile in Unraid wieder löschen.** Damit ist der Zugang wieder zu.
+**Emergency procedure**
+1. Run `notschluessel` inside the container. The first run creates the key; later runs only print the line.
+2. Add the printed line (starts with `from="…"`) in Unraid under
+   **Users → root → SSH authorized keys**.
+3. Claude does the one task, **every command only after confirmation**.
+4. **Delete the line in Unraid again.** Access is closed.
 
-`from="…"` bedeutet, dass der Schlüssel nur aus dem Docker-Netz gilt (Standard `172.17.0.0/16`).
-Wenn das Netz anders ist, die Container-Variable `NOTSCHLUESSEL_FROM` setzen.
+`from="…"` means the key only works from the Docker network (default `172.17.0.0/16`).
+If your network differs, set the container variable `NOTSCHLUESSEL_FROM`.
 
-## Dateien in diesem Projekt
+## Files in this project
 
-| Datei | Zweck |
+| File | Purpose |
 |---|---|
-| `Dockerfile` | Bauanleitung für das Image |
-| `entrypoint.sh` | Startskript: Installation, Anmeldeprüfung, Remote-Control-Schleife |
-| `notschluessel.sh` | erzeugt bzw. zeigt den SSH-Notschlüssel (im Image als `notschluessel`) |
-| `neu-bauen.sh` | Notweg: Image auf dem Unraid selbst bauen |
-| `.github/workflows/bauen.yml` | GitHub baut und veröffentlicht das Image |
-| `CHANGELOG.md` | was sich wann geändert hat |
+| `Dockerfile` | build instructions for the image |
+| `entrypoint.sh` | start script: installation, login check, Remote Control loop |
+| `notschluessel.sh` | creates/shows the SSH emergency key (in the image as `notschluessel`) |
+| `neu-bauen.sh` | fallback: build the image on the Unraid server |
+| `.github/workflows/bauen.yml` | GitHub builds and publishes the image |
+| `CHANGELOG.md` | what changed when (German: `CHANGELOG.de.md`) |
 
-## Fehlersuche
+## Troubleshooting
 
-| Im Log steht … | Bedeutung / Lösung |
+| Log says … | Meaning / fix |
 |---|---|
-| `Noch nicht angemeldet` | [Erste Anmeldung](#erste-anmeldung) durchführen |
-| `/config ist nicht beschreibbar` | `chown -R 99:100 /mnt/user/appdata/claude-server` |
+| `Noch nicht angemeldet` (not logged in) | do the [first login](#first-login) |
+| `/config ist nicht beschreibbar` (not writable) | `chown -R 99:100 /mnt/user/appdata/claude-server` |
 | `login expired` | `docker exec -it Claude-Server claude` → `/login` |
-| `Remote Control beendet … Neustart in 60 s` | meist kurz kein Netz, er startet von selbst neu |
-| Unraid zeigt bei Update „not available“ | Ist das GitHub-Paket öffentlich? (GitHub → Packages → claude-server → Package settings) |
+| `Remote Control beendet … Neustart in 60 s` (ended, restart in 60 s) | usually a short network outage; it restarts by itself |
+| Unraid shows „not available“ for updates | Is the GitHub package public? (GitHub → Packages → claude-server → Package settings) |
 
-## Lizenz
+## License
 
 MIT

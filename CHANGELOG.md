@@ -1,12 +1,18 @@
-# Änderungen
+# Changelog
+
+🇬🇧 **English** · 🇩🇪 [Deutsch](CHANGELOG.de.md)
 
 ## 2026-09-28
-- Grundsystem von `debian:bookworm-slim` auf `debian:stable-slim` umgestellt (immer die aktuelle Debian-Version).
-- Werkzeuge ergänzt: openssh-client, python3, iputils-ping, dnsutils, netcat-openbsd, iproute2, less, file, unzip.
-- `notschluessel`: SSH-Notschlüssel, der pro Installation selbst erzeugt wird und normalerweise nicht aktiv ist.
-- GitHub baut das Image automatisch (monatlich und bei jeder Änderung), damit Unraid Updates anzeigt.
-- Dokumentation (README) geschrieben.
+- Documentation now in English (`README.md`, `CHANGELOG.md`) and German (`README.de.md`, `CHANGELOG.de.md`).
+- Documentation-only changes no longer trigger an image rebuild.
 
-## 2026-09-28 (erste Fassung)
-- Claude Code wird nicht mehr ins Image eingebaut, sondern beim ersten Start nach `/config/.local` installiert und aktualisiert sich selbst.
-- Remote Control als Dauerdienst, bewusst ohne `--dangerously-skip-permissions`.
+## 2026-09-28
+- Base image switched from `debian:bookworm-slim` to `debian:stable-slim` (always the current Debian release).
+- Tools added: openssh-client, python3, iputils-ping, dnsutils, netcat-openbsd, iproute2, less, file, unzip.
+- `notschluessel`: SSH emergency key, generated per installation and normally not active.
+- GitHub builds the image automatically (monthly and on every change) so Unraid shows updates.
+- Documentation (README) written.
+
+## 2026-09-28 (first version)
+- Claude Code is no longer baked into the image; it is installed into `/config/.local` on first start and updates itself.
+- Remote Control as an always-on service, deliberately without `--dangerously-skip-permissions`.

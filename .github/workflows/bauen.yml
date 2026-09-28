@@ -1,11 +1,15 @@
 # Baut das Claude-Server-Image und legt es in die GitHub-Registry (ghcr.io).
-# Laeuft: bei jeder Aenderung, am 1. jeden Monats um 03:00 UTC und per Knopf
+# Laeuft: bei jeder Aenderung (ausser reiner Doku), am 1. jeden Monats um 03:00 UTC und per Knopf
 # ("Actions" -> "Image bauen" -> "Run workflow").
 name: Image bauen
 
 on:
   push:
     branches: [main]
+    # Reine Doku-Aenderungen bauen kein neues Image.
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
   schedule:
     - cron: "0 3 1 * *"
   workflow_dispatch:
