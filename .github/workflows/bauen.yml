@@ -1,0 +1,39 @@
+# Baut das Claude-Server-Image und legt es in die GitHub-Registry (ghcr.io).
+# Laeuft: bei jeder Aenderung, am 1. jeden Monats um 03:00 UTC und per Knopf
+# ("Actions" -> "Image bauen" -> "Run workflow").
+name: Image bauen
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 3 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ghcr.io verlangt Kleinbuchstaben im Namen.
+      - name: Namen festlegen
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/claude-server:latest" >> "$GITHUB_ENV"
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          pull: true
+          no-cache: true
+          push: true
+          tags: ${{ env.IMAGE }}
