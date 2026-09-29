@@ -2,6 +2,10 @@
 
 🇬🇧 **English** · 🇩🇪 [Deutsch](CHANGELOG.de.md)
 
+## 2026-09-29
+- Unraid template `unraid/claude-server.xml` with the recommended security settings (`--cap-drop=ALL`, `no-new-privileges`, memory/CPU limits).
+- README: installation via template, explanation of the extra parameters.
+
 ## 2026-09-28
 - Container watchdog: notifications are optional (`MELDEN`, `ENTWARNUNG`); everything is always written to the system log.
 - `unraid/container-waechter.sh`: optional watchdog for the Unraid host (unhealthy / stopped autostart containers → Unraid notifications, German or English).

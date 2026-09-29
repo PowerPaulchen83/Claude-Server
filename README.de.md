@@ -45,6 +45,7 @@ Grundsatz: **Claude darf wenig. Mehr gibt es nur, wenn der Besitzer es ausdrück
 | Benutzer | Läuft als `99:100` (Unraid `nobody:users`), nicht als root. |
 | Docker | **Kein** Docker-Socket. Wer den Socket hat, ist praktisch root auf dem Server, auch wenn er „nur lesend“ eingebunden ist. |
 | Dateien | Nur `/config` (appdata des Containers) und `/workspace` (ein Arbeitsordner). Keine weiteren Shares. |
+| Sonderrechte | Start mit `--cap-drop=ALL` und `no-new-privileges` (siehe [Installation](#installation-auf-unraid)). |
 | Ports | Keine. Remote Control baut nur eine Verbindung **nach außen** zu Anthropic auf. |
 | Zugangsdaten | Nichts davon steht im Image oder in diesem Projekt. Die Anmeldung liegt in `/config/.credentials.json`. |
 | SSH | Eigener Schlüssel pro Installation, **normalerweise nicht aktiv** (siehe [SSH-Notschlüssel](#ssh-notschlüssel)). |
@@ -61,7 +62,17 @@ Zum Server-Zugriff nutzt Claude MCP-Server (z. B. einen Unraid-MCP im Nur-lesen-
    mkdir -p /mnt/user/appdata/claude-server
    chown 99:100 /mnt/user/appdata/claude-server
    ```
-2. **Docker → Add Container**:
+2. **Am einfachsten: mit der Vorlage.** In den Vorlagen-Ordner von Unraid laden (Unraid-Terminal):
+   ```bash
+   wget -O /boot/config/plugins/dockerMan/templates-user/my-Claude-Server.xml \
+     https://raw.githubusercontent.com/PowerPaulchen83/Claude-Server/main/unraid/claude-server.xml
+   ```
+   Dann **Docker → Add Container → Template: Claude-Server**, den **Arbeitsordner** eintragen, **Apply**.
+
+   > ⚠️ Nur für eine **neue** Installation. Gibt es schon einen Container `Claude-Server`,
+   > überschreibt der Befehl dessen gespeicherte Einstellungen.
+
+   **Oder von Hand: Docker → Add Container**:
 
    | Feld | Wert |
    |---|---|
@@ -70,9 +81,20 @@ Zum Server-Zugriff nutzt Claude MCP-Server (z. B. einen Unraid-MCP im Nur-lesen-
    | Network Type | `bridge` |
    | Pfad `/config` | `/mnt/user/appdata/claude-server` (rw) |
    | Pfad `/workspace` | ein Arbeitsordner, z. B. `/mnt/user/…/Claude` (rw) |
-   | Extra Parameters | *(leer)* |
+   | Extra Parameters (Advanced View) | `--hostname claude-server --security-opt=no-new-privileges --cap-drop=ALL --memory=4g --cpus=4` |
 
 3. **Apply**. Im Log steht danach „Noch nicht angemeldet …“. Das ist beim ersten Start richtig so.
+
+**Was die Extra Parameters bewirken**
+
+| Parameter | Bedeutung |
+|---|---|
+| `--cap-drop=ALL` | nimmt dem Container alle Linux-Sonderrechte; Claude braucht keine davon |
+| `--security-opt=no-new-privileges` | niemand im Container kann nachträglich mehr Rechte bekommen (z. B. über `su`) |
+| `--memory=4g --cpus=4` | Obergrenzen, damit der Container den Server nie ausbremst |
+| `--hostname claude-server` | fester Name statt zufälliger Kennung |
+
+Mit diesen Grenzen funktioniert trotzdem alles: Dateien, git, Netzwerk, `ping`, Updates.
 
 ## Erste Anmeldung
 
@@ -169,6 +191,7 @@ Seit ca. 10 Min. ungesund. Prüfung meldet: krank: Remote Control laeuft nicht
 | `entrypoint.sh` | Startskript: Installation, Anmeldeprüfung, Remote-Control-Schleife |
 | `notschluessel.sh` | erzeugt bzw. zeigt den SSH-Notschlüssel (im Image als `notschluessel`) |
 | `gesund.sh` | Gesundheitsprüfung (im Image als `gesund`) |
+| `unraid/claude-server.xml` | Unraid-Vorlage mit allen Einstellungen |
 | `unraid/container-waechter.sh` | optionaler Wächter für den Unraid-Host, siehe [Container-Wächter](#container-wächter-optional) |
 | `neu-bauen.sh` | Notweg: Image auf dem Unraid selbst bauen |
 | `.github/workflows/bauen.yml` | GitHub baut und veröffentlicht das Image |

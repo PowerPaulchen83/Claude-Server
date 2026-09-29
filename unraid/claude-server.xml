@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Claude-Server</Name>
+  <Repository>ghcr.io/powerpaulchen83/claude-server:latest</Repository>
+  <Registry>https://github.com/PowerPaulchen83/Claude-Server/pkgs/container/claude-server</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/PowerPaulchen83/Claude-Server/issues</Support>
+  <Project>https://github.com/PowerPaulchen83/Claude-Server</Project>
+  <Overview>Claude Code as an always-on service (Remote Control) - talk to it from the Claude app or claude.ai/code. No ports, no Docker socket, runs as 99:100 without privileges. After the first start, log in once: docker exec -it Claude-Server claude (see README).&#xD;
+&#xD;
+Claude Code als Dauerdienst (Remote Control) - Bedienung über die Claude-App oder claude.ai/code. Keine Ports, kein Docker-Socket, läuft als 99:100 ohne Sonderrechte. Nach dem ersten Start einmal anmelden: docker exec -it Claude-Server claude (siehe README).</Overview>
+  <Category>Tools: Productivity:</Category>
+  <WebUI/>
+  <TemplateURL>https://raw.githubusercontent.com/PowerPaulchen83/Claude-Server/main/unraid/claude-server.xml</TemplateURL>
+  <Icon/>
+  <ExtraParams>--hostname claude-server --security-opt=no-new-privileges --cap-drop=ALL --memory=4g --cpus=4</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires>Claude Pro/Max subscription. Before the first start: mkdir -p /mnt/user/appdata/claude-server &amp;&amp; chown 99:100 /mnt/user/appdata/claude-server</Requires>
+  <Config Name="Config / Einstellungen" Target="/config" Default="/mnt/user/appdata/claude-server" Mode="rw" Description="Login, settings, memory, Claude Code itself. Must be owned by 99:100. / Anmeldung, Einstellungen, Gedächtnis, Claude Code selbst. Muss 99:100 gehören." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/claude-server</Config>
+  <Config Name="Workspace / Arbeitsordner" Target="/workspace" Default="" Mode="rw" Description="The folder Claude works in (notes, projects). / Der Ordner, in dem Claude arbeitet (Notizen, Projekte)." Type="Path" Display="always" Required="true" Mask="false"></Config>
+  <Config Name="NOTSCHLUESSEL_FROM" Target="NOTSCHLUESSEL_FROM" Default="172.17.0.0/16" Mode="" Description="Network the SSH emergency key is valid from (from= option). / Netz, aus dem der SSH-Notschlüssel gilt." Type="Variable" Display="advanced" Required="false" Mask="false">172.17.0.0/16</Config>
+</Container>

@@ -2,6 +2,10 @@
 
 🇬🇧 [English](CHANGELOG.md) · 🇩🇪 **Deutsch**
 
+## 2026-09-29
+- Unraid-Vorlage `unraid/claude-server.xml` mit den empfohlenen Sicherheitseinstellungen (`--cap-drop=ALL`, `no-new-privileges`, Speicher-/CPU-Grenzen).
+- README: Installation per Vorlage, Erklärung der Extra Parameters.
+
 ## 2026-09-28
 - Container-Wächter: Benachrichtigungen abschaltbar (`MELDEN`, `ENTWARNUNG`); alles wird immer ins Systemprotokoll geschrieben.
 - `unraid/container-waechter.sh`: optionaler Wächter für den Unraid-Host (ungesunde bzw. gestoppte Autostart-Container → Unraid-Benachrichtigungen, deutsch oder englisch).
