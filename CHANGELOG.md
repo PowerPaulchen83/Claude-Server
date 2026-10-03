@@ -2,6 +2,9 @@
 
 🇬🇧 **English** · 🇩🇪 [Deutsch](CHANGELOG.de.md)
 
+## 2026-10-03
+- Container watchdog: also checks containers that must run without Unraid autostart (`MUSS_LAUFEN`, default: Nextcloud AIO parts; paused during AIO backup) and filesystem usage (`PLATZ`, default `/var/log` 80 %, Docker vDisk 85 %).
+
 ## 2026-09-29
 - Unraid template `unraid/claude-server.xml` with the recommended security settings (`--cap-drop=ALL`, `no-new-privileges`, memory/CPU limits).
 - README: installation via template, explanation of the extra parameters.

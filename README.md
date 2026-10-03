@@ -161,6 +161,8 @@ It sends a message through the normal Unraid notifications (e.g. Telegram, e-mai
 
 - a container with a health check becomes **unhealthy** (e.g. this one), or
 - a container with **Unraid autostart** is not running,
+- a container that **must run** although Unraid does not start it (`MUSS_LAUFEN`, by default all parts of **Nextcloud AIO**) is not running – paused while an AIO backup/update is running,
+- a filesystem is **too full** (`PLATZ`, by default the log filesystem `/var/log` at 80 % and the Docker vDisk at 85 %),
 
 and one more message when everything is back to normal. It only alerts after the problem has lasted
 for 2 runs in a row (about 10 min), so short interruptions such as the appdata backup stay quiet.
@@ -175,6 +177,10 @@ schedule **Custom** `*/5 * * * *`.
 | `SPRACHE` | `de` | `en` for English messages |
 | `MELDEN` | `ja` | `nein` (no) = **no notifications**, only a line in the Unraid system log |
 | `ENTWARNUNG` | `ja` | `nein` (no) = no "back to normal" message, only problems |
+| `MUSS_LAUFEN` | `nextcloud-aio-*` | containers (patterns, space separated) that must run even without Unraid autostart |
+| `AUSNAHMEN` | `nextcloud-aio-domaincheck nextcloud-aio-borgbackup` | exceptions: containers that stop on purpose |
+| `PAUSE_WENN_LAEUFT` | `nextcloud-aio-borgbackup` | while this runs (backup/update), `MUSS_LAUFEN` is not checked |
+| `PLATZ` | `/var/log:80 /var/lib/docker:85` | filesystems to check as `path:limit-%`; empty = off |
 | `SCHWELLE` | `2` | how many runs in a row (5 min each) a problem must last before it is reported |
 
 Whether a notification reaches you via Telegram, e-mail or only in the browser is set in Unraid under

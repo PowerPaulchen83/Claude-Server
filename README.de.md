@@ -158,6 +158,8 @@ Es schickt über die normalen Unraid-Benachrichtigungen (z. B. Telegram, E-Mail)
 
 - ein Container mit Gesundheitsprüfung **unhealthy** wird (z. B. dieser hier) oder
 - ein Container mit **Unraid-Autostart** nicht läuft,
+- ein Container, der **laufen muss**, obwohl Unraid ihn nicht startet (`MUSS_LAUFEN`, standardmäßig alle Teile von **Nextcloud AIO**), nicht läuft – während eines AIO-Backups/Updates wird pausiert,
+- ein Laufwerk **zu voll** ist (`PLATZ`, standardmäßig das Protokoll-Laufwerk `/var/log` ab 80 % und die Docker-vDisk ab 85 %),
 
 und noch eine, wenn alles wieder in Ordnung ist. Gemeldet wird erst, wenn das Problem 2 Läufe
 hintereinander besteht (ca. 10 Min.). Kurze Unterbrechungen wie das Appdata-Backup bleiben so still.
@@ -172,6 +174,10 @@ Zeitplan **Custom** `*/5 * * * *`.
 | `SPRACHE` | `de` | `en` für englische Meldungen |
 | `MELDEN` | `ja` | `nein` = **keine Benachrichtigungen**, nur ein Eintrag im Unraid-Systemprotokoll |
 | `ENTWARNUNG` | `ja` | `nein` = keine „wieder in Ordnung“-Meldung, nur Probleme |
+| `MUSS_LAUFEN` | `nextcloud-aio-*` | Container (Muster, mit Leerzeichen getrennt), die auch ohne Unraid-Autostart laufen müssen |
+| `AUSNAHMEN` | `nextcloud-aio-domaincheck nextcloud-aio-borgbackup` | Ausnahmen: Container, die absichtlich stoppen |
+| `PAUSE_WENN_LAEUFT` | `nextcloud-aio-borgbackup` | solange dieser läuft (Backup/Update), wird `MUSS_LAUFEN` nicht geprüft |
+| `PLATZ` | `/var/log:80 /var/lib/docker:85` | Laufwerke als `Pfad:Grenze-%`, leer = aus |
 | `SCHWELLE` | `2` | wie viele Läufe (je 5 Min.) ein Problem bestehen muss, bevor gemeldet wird |
 
 Ob eine Meldung per Telegram, E-Mail oder nur im Browser ankommt, stellst du in Unraid unter
