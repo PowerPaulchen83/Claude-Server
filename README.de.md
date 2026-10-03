@@ -19,7 +19,6 @@ Claude Code als **Dauerdienst auf einem Unraid-Server**. Man spricht per
 - [Erste Anmeldung](#erste-anmeldung)
 - [Updates](#updates)
 - [SSH-Notschlüssel](#ssh-notschlüssel)
-- [Container-Wächter (optional)](#container-wächter-optional)
 - [Dateien in diesem Projekt](#dateien-in-diesem-projekt)
 - [Fehlersuche](#fehlersuche)
 
@@ -151,44 +150,6 @@ den Schlüssel gerade freigeschaltet hat**.
 `from="…"` bedeutet, dass der Schlüssel nur aus dem Docker-Netz gilt (Standard `172.17.0.0/16`).
 Wenn das Netz anders ist, die Container-Variable `NOTSCHLUESSEL_FROM` setzen.
 
-## Container-Wächter (optional)
-
-`unraid/container-waechter.sh` ist ein kleines Skript für den **Unraid-Host** (nicht für den Container).
-Es schickt über die normalen Unraid-Benachrichtigungen (z. B. Telegram, E-Mail) eine Nachricht, wenn
-
-- ein Container mit Gesundheitsprüfung **unhealthy** wird (z. B. dieser hier) oder
-- ein Container mit **Unraid-Autostart** nicht läuft,
-- ein Container, der **laufen muss**, obwohl Unraid ihn nicht startet (`MUSS_LAUFEN`, standardmäßig alle Teile von **Nextcloud AIO**), nicht läuft – während eines AIO-Backups/Updates wird pausiert,
-- ein Laufwerk **zu voll** ist (`PLATZ`, standardmäßig das Protokoll-Laufwerk `/var/log` ab 80 % und die Docker-vDisk ab 85 %),
-
-und noch eine, wenn alles wieder in Ordnung ist. Gemeldet wird erst, wenn das Problem 2 Läufe
-hintereinander besteht (ca. 10 Min.). Kurze Unterbrechungen wie das Appdata-Backup bleiben so still.
-
-**Einrichten:** Settings → User Scripts → Add New Script → Inhalt der Datei einfügen →
-Zeitplan **Custom** `*/5 * * * *`.
-
-**Einstellungen** (oben im Skript):
-
-| Einstellung | Standard | Bedeutung |
-|---|---|---|
-| `SPRACHE` | `de` | `en` für englische Meldungen |
-| `MELDEN` | `ja` | `nein` = **keine Benachrichtigungen**, nur ein Eintrag im Unraid-Systemprotokoll |
-| `ENTWARNUNG` | `ja` | `nein` = keine „wieder in Ordnung“-Meldung, nur Probleme |
-| `MUSS_LAUFEN` | `nextcloud-aio-*` | Container (Muster, mit Leerzeichen getrennt), die auch ohne Unraid-Autostart laufen müssen |
-| `AUSNAHMEN` | `nextcloud-aio-domaincheck nextcloud-aio-borgbackup` | Ausnahmen: Container, die absichtlich stoppen |
-| `PAUSE_WENN_LAEUFT` | `nextcloud-aio-borgbackup` | solange dieser läuft (Backup/Update), wird `MUSS_LAUFEN` nicht geprüft |
-| `PLATZ` | `/var/log:80 /var/lib/docker:85` | Laufwerke als `Pfad:Grenze-%`, leer = aus |
-| `SCHWELLE` | `2` | wie viele Läufe (je 5 Min.) ein Problem bestehen muss, bevor gemeldet wird |
-
-Ob eine Meldung per Telegram, E-Mail oder nur im Browser ankommt, stellst du in Unraid unter
-**Settings → Notifications** pro Stufe ein (der Wächter nutzt *Warnung* für Probleme und *Hinweis* für „wieder in Ordnung“).
-
-Beispiel:
-```
-⚠️ PowerServer: Claude-Server ist ungesund
-Seit ca. 10 Min. ungesund. Prüfung meldet: krank: Remote Control laeuft nicht
-```
-
 ## Dateien in diesem Projekt
 
 | Datei | Zweck |
@@ -198,7 +159,6 @@ Seit ca. 10 Min. ungesund. Prüfung meldet: krank: Remote Control laeuft nicht
 | `notschluessel.sh` | erzeugt bzw. zeigt den SSH-Notschlüssel (im Image als `notschluessel`) |
 | `gesund.sh` | Gesundheitsprüfung (im Image als `gesund`) |
 | `unraid/claude-server.xml` | Unraid-Vorlage mit allen Einstellungen |
-| `unraid/container-waechter.sh` | optionaler Wächter für den Unraid-Host, siehe [Container-Wächter](#container-wächter-optional) |
 | `neu-bauen.sh` | Notweg: Image auf dem Unraid selbst bauen |
 | `.github/workflows/bauen.yml` | GitHub baut und veröffentlicht das Image |
 | `CHANGELOG.de.md` | was sich wann geändert hat (englisch: `CHANGELOG.md`) |

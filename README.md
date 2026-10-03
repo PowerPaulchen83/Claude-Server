@@ -22,7 +22,6 @@ Claude Code as an **always-on service on an Unraid server**. You talk to it via
 - [First login](#first-login)
 - [Updates](#updates)
 - [SSH emergency key](#ssh-emergency-key)
-- [Container watchdog (optional)](#container-watchdog-optional)
 - [Files in this project](#files-in-this-project)
 - [Troubleshooting](#troubleshooting)
 
@@ -154,44 +153,6 @@ has the key unlocked**.
 `from="…"` means the key only works from the Docker network (default `172.17.0.0/16`).
 If your network differs, set the container variable `NOTSCHLUESSEL_FROM`.
 
-## Container watchdog (optional)
-
-`unraid/container-waechter.sh` is a small script for the **Unraid host** (not for the container).
-It sends a message through the normal Unraid notifications (e.g. Telegram, e-mail) when
-
-- a container with a health check becomes **unhealthy** (e.g. this one), or
-- a container with **Unraid autostart** is not running,
-- a container that **must run** although Unraid does not start it (`MUSS_LAUFEN`, by default all parts of **Nextcloud AIO**) is not running – paused while an AIO backup/update is running,
-- a filesystem is **too full** (`PLATZ`, by default the log filesystem `/var/log` at 80 % and the Docker vDisk at 85 %),
-
-and one more message when everything is back to normal. It only alerts after the problem has lasted
-for 2 runs in a row (about 10 min), so short interruptions such as the appdata backup stay quiet.
-
-**Setup:** Settings → User Scripts → Add New Script → paste the file content →
-schedule **Custom** `*/5 * * * *`.
-
-**Options** (at the top of the script):
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `SPRACHE` | `de` | `en` for English messages |
-| `MELDEN` | `ja` | `nein` (no) = **no notifications**, only a line in the Unraid system log |
-| `ENTWARNUNG` | `ja` | `nein` (no) = no "back to normal" message, only problems |
-| `MUSS_LAUFEN` | `nextcloud-aio-*` | containers (patterns, space separated) that must run even without Unraid autostart |
-| `AUSNAHMEN` | `nextcloud-aio-domaincheck nextcloud-aio-borgbackup` | exceptions: containers that stop on purpose |
-| `PAUSE_WENN_LAEUFT` | `nextcloud-aio-borgbackup` | while this runs (backup/update), `MUSS_LAUFEN` is not checked |
-| `PLATZ` | `/var/log:80 /var/lib/docker:85` | filesystems to check as `path:limit-%`; empty = off |
-| `SCHWELLE` | `2` | how many runs in a row (5 min each) a problem must last before it is reported |
-
-Whether a notification reaches you via Telegram, e-mail or only in the browser is set in Unraid under
-**Settings → Notifications** per level (the watchdog uses *warning* for problems and *notice* for "back to normal").
-
-Example:
-```
-⚠️ PowerServer: Claude-Server is unhealthy
-Unhealthy for about 10 min. Check says: krank: Remote Control laeuft nicht
-```
-
 ## Files in this project
 
 | File | Purpose |
@@ -201,7 +162,6 @@ Unhealthy for about 10 min. Check says: krank: Remote Control laeuft nicht
 | `notschluessel.sh` | creates/shows the SSH emergency key (in the image as `notschluessel`) |
 | `gesund.sh` | health check (in the image as `gesund`) |
 | `unraid/claude-server.xml` | Unraid template with all settings |
-| `unraid/container-waechter.sh` | optional watchdog for the Unraid host, see [Container watchdog](#container-watchdog-optional) |
 | `neu-bauen.sh` | fallback: build the image on the Unraid server |
 | `.github/workflows/bauen.yml` | GitHub builds and publishes the image |
 | `CHANGELOG.md` | what changed when (German: `CHANGELOG.de.md`) |
