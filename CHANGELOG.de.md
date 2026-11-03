@@ -2,6 +2,9 @@
 
 🇬🇧 [English](CHANGELOG.md) · 🇩🇪 **Deutsch**
 
+## 2026-11-03
+- Optionaler Nextcloud-Abgleich: `nextcloudcmd` ist jetzt im Image. Gibt es `/config/nextcloud-abgleich.conf`, gleicht das Startskript einen Ordner in festem Takt in beide Richtungen ab (siehe README). Ohne diese Datei ändert sich nichts.
+
 ## 2026-10-03
 - Der Container-Wächter (`unraid/container-waechter.sh`) ist nicht mehr Teil dieses Projekts – hier gibt es jetzt nur noch den Container und seine Unraid-Vorlage.
 

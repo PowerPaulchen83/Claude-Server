@@ -19,6 +19,7 @@ Claude Code als **Dauerdienst auf einem Unraid-Server**. Man spricht per
 - [Erste Anmeldung](#erste-anmeldung)
 - [Updates](#updates)
 - [SSH-Notschlüssel](#ssh-notschlüssel)
+- [Nextcloud-Ordner abgleichen (optional)](#nextcloud-ordner-abgleichen-optional)
 - [Dateien in diesem Projekt](#dateien-in-diesem-projekt)
 - [Fehlersuche](#fehlersuche)
 
@@ -32,7 +33,8 @@ Claude Code als **Dauerdienst auf einem Unraid-Server**. Man spricht per
 - Anmeldung, Einstellungen und Gedächtnis liegen in `/config` (appdata), **nie im Image**.
 - Eine **Gesundheitsprüfung** läuft alle 60 s: Unraid zeigt den Container als *healthy*, solange Remote Control läuft, und nach etwa 3 Minuten ohne als *unhealthy*.
 - Das Image selbst enthält nur Debian (`stable-slim`) und ein paar Werkzeuge:
-  git, ripgrep, curl, jq, ssh-Client, python3, ping, dig, nc, ip, less, file, unzip.
+  git, ripgrep, curl, jq, ssh-Client, python3, ping, dig, nc, ip, less, file, unzip, nextcloudcmd.
+- Auf Wunsch gleicht er einen Nextcloud-Ordner ab (siehe [unten](#nextcloud-ordner-abgleichen-optional)).
 
 ## Sicherheit
 
@@ -150,12 +152,38 @@ den Schlüssel gerade freigeschaltet hat**.
 `from="…"` bedeutet, dass der Schlüssel nur aus dem Docker-Netz gilt (Standard `172.17.0.0/16`).
 Wenn das Netz anders ist, die Container-Variable `NOTSCHLUESSEL_FROM` setzen.
 
+## Nextcloud-Ordner abgleichen (optional)
+
+Der Container kann einen Ordner aus einer Nextcloud regelmäßig abgleichen, in beide Richtungen
+wie die Desktop-App (mit `nextcloudcmd`). So arbeiten Claude im Container und Claude auf anderen
+Geräten mit denselben Dateien. Ohne Einstellungsdatei passiert nichts.
+
+1. In der Nextcloud ein eigenes Konto für Claude anlegen (ohne Admin), dafür ein **App-Passwort**
+   erzeugen und nur den gewünschten Ordner mit diesem Konto teilen.
+2. Das App-Passwort in eine Datei in appdata legen, z. B. `/config/.nextcloud-token` (nur für 99:100 lesbar).
+3. `/config/nextcloud-abgleich.conf` anlegen:
+
+   ```
+   NC_URL=http://<server>:<port>
+   NC_USER=<konto>
+   NC_PASSWORT_DATEI=/config/.nextcloud-token
+   NC_ORDNER=/Shared/<ordner>
+   NC_ZIEL=/config/nextcloud/<ordner>
+   NC_TAKT=60
+   ```
+
+4. Container neu starten. Das Log zeigt `Nextcloud-Abgleich: … alle 60 s`.
+   Das Ergebnis des letzten Abgleichs steht in `/config/nextcloud-abgleich.log` (`ok` oder `FEHLER`).
+
+Die Datei wird nur gelesen, nicht ausgeführt. Bricht der Abgleich ab, läuft Claude normal weiter.
+Gelöschtes oder Überschriebenes lässt sich über Papierkorb und Versionen der Nextcloud zurückholen.
+
 ## Dateien in diesem Projekt
 
 | Datei | Zweck |
 |---|---|
 | `Dockerfile` | Bauanleitung für das Image |
-| `entrypoint.sh` | Startskript: Installation, Anmeldeprüfung, Remote-Control-Schleife |
+| `entrypoint.sh` | Startskript: Installation, Anmeldeprüfung, Remote-Control-Schleife, Nextcloud-Abgleich |
 | `notschluessel.sh` | erzeugt bzw. zeigt den SSH-Notschlüssel (im Image als `notschluessel`) |
 | `gesund.sh` | Gesundheitsprüfung (im Image als `gesund`) |
 | `unraid/claude-server.xml` | Unraid-Vorlage mit allen Einstellungen |
@@ -170,6 +198,8 @@ Wenn das Netz anders ist, die Container-Variable `NOTSCHLUESSEL_FROM` setzen.
 | `Noch nicht angemeldet` | [Erste Anmeldung](#erste-anmeldung) durchführen |
 | `/config ist nicht beschreibbar` | `chown -R 99:100 /mnt/user/appdata/claude-server` |
 | `login expired` | `docker exec -it Claude-Server claude` → `/login` |
+| `Nextcloud-Abgleich: … unvollstaendig` | `/config/nextcloud-abgleich.conf` und Passwortdatei prüfen |
+| `FEHLER` in `nextcloud-abgleich.log` | Adresse, Konto, App-Passwort und Freigabe des Ordners prüfen; die Zeilen darüber nennen den Grund |
 | `Remote Control beendet … Neustart in 60 s` | meist kurz kein Netz, er startet von selbst neu |
 | Docker-Tab zeigt *unhealthy* | `docker exec Claude-Server gesund` aufrufen: `nicht angemeldet` = [Erste Anmeldung](#erste-anmeldung) durchführen; `Remote Control laeuft nicht` = Log ansehen |
 | Unraid zeigt bei Update „not available“ | Ist das GitHub-Paket öffentlich? (GitHub → Packages → claude-server → Package settings) |

@@ -2,6 +2,9 @@
 
 🇬🇧 **English** · 🇩🇪 [Deutsch](CHANGELOG.de.md)
 
+## 2026-11-03
+- Optional Nextcloud folder sync: `nextcloudcmd` is now included in the image. If `/config/nextcloud-abgleich.conf` exists, the start script syncs one folder in both directions at a fixed interval (see README). Without that file nothing changes.
+
 ## 2026-10-03
 - The container watchdog (`unraid/container-waechter.sh`) is no longer part of this project – this project now contains only the container and its Unraid template.
 
