@@ -22,6 +22,7 @@ Claude Code as an **always-on service on an Unraid server**. You talk to it via
 - [First login](#first-login)
 - [Updates](#updates)
 - [SSH emergency key](#ssh-emergency-key)
+- [Sync a Nextcloud folder (optional)](#sync-a-nextcloud-folder-optional)
 - [Files in this project](#files-in-this-project)
 - [Troubleshooting](#troubleshooting)
 
@@ -35,7 +36,8 @@ Claude Code as an **always-on service on an Unraid server**. You talk to it via
 - Login, settings and memory live in `/config` (appdata), **never in the image**.
 - A **health check** runs every 60 s: Unraid shows the container as *healthy* while Remote Control is running, and *unhealthy* after about 3 minutes without it.
 - The image itself only contains Debian (`stable-slim`) and a few tools:
-  git, ripgrep, curl, jq, ssh client, python3, ping, dig, nc, ip, less, file, unzip.
+  git, ripgrep, curl, jq, ssh client, python3, ping, dig, nc, ip, less, file, unzip, nextcloudcmd.
+- Optionally it syncs a Nextcloud folder (see [below](#sync-a-nextcloud-folder-optional)).
 
 ## Security
 
@@ -153,12 +155,38 @@ has the key unlocked**.
 `from="…"` means the key only works from the Docker network (default `172.17.0.0/16`).
 If your network differs, set the container variable `NOTSCHLUESSEL_FROM`.
 
+## Sync a Nextcloud folder (optional)
+
+The container can regularly sync a folder from a Nextcloud, in both directions like the desktop app
+(using `nextcloudcmd`). This way Claude in the container and Claude on other devices work with the
+same files. Without a settings file nothing happens.
+
+1. In Nextcloud, create a separate account for Claude (no admin), create an **app password** for it
+   and share only the folder you want with that account.
+2. Put the app password into a file in appdata, e.g. `/config/.nextcloud-token` (readable only by 99:100).
+3. Create `/config/nextcloud-abgleich.conf`:
+
+   ```
+   NC_URL=http://<server>:<port>
+   NC_USER=<account>
+   NC_PASSWORT_DATEI=/config/.nextcloud-token
+   NC_ORDNER=/Shared/<folder>
+   NC_ZIEL=/config/nextcloud/<folder>
+   NC_TAKT=60
+   ```
+
+4. Restart the container. The log shows `Nextcloud-Abgleich: … alle 60 s`.
+   The result of the last sync is in `/config/nextcloud-abgleich.log` (`ok` or `FEHLER`).
+
+The file is only read, never executed. If the sync fails, Claude keeps running normally.
+Deleted or overwritten files can be restored from the Nextcloud trash bin and versions.
+
 ## Files in this project
 
 | File | Purpose |
 |---|---|
 | `Dockerfile` | build instructions for the image |
-| `entrypoint.sh` | start script: installation, login check, Remote Control loop |
+| `entrypoint.sh` | start script: installation, login check, Remote Control loop, Nextcloud sync |
 | `notschluessel.sh` | creates/shows the SSH emergency key (in the image as `notschluessel`) |
 | `gesund.sh` | health check (in the image as `gesund`) |
 | `unraid/claude-server.xml` | Unraid template with all settings |
@@ -173,6 +201,8 @@ If your network differs, set the container variable `NOTSCHLUESSEL_FROM`.
 | `Noch nicht angemeldet` (not logged in) | do the [first login](#first-login) |
 | `/config ist nicht beschreibbar` (not writable) | `chown -R 99:100 /mnt/user/appdata/claude-server` |
 | `login expired` | `docker exec -it Claude-Server claude` → `/login` |
+| `Nextcloud-Abgleich: … unvollstaendig` | check `/config/nextcloud-abgleich.conf` and the password file |
+| `FEHLER` in `nextcloud-abgleich.log` | check address, account, app password and folder share; the lines above give the reason |
 | `Remote Control beendet … Neustart in 60 s` (ended, restart in 60 s) | usually a short network outage; it restarts by itself |
 | Docker tab shows *unhealthy* | Run `docker exec Claude-Server gesund`: `nicht angemeldet` = do the [first login](#first-login); `Remote Control laeuft nicht` = check the log |
 | Unraid shows „not available“ for updates | Is the GitHub package public? (GitHub → Packages → claude-server → Package settings) |

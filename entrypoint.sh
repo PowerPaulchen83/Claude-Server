@@ -66,16 +66,64 @@ if [ ! -f "$KONFIG/.credentials.json" ]; then
     while true; do sleep 3600; done
 fi
 
+# Optional: einen Nextcloud-Ordner regelmaessig abgleichen (in beide Richtungen,
+# wie die Desktop-App). Nur wenn $KONFIG/nextcloud-abgleich.conf existiert.
+# Zeilen KEY=Wert (wird gelesen, nicht ausgefuehrt):
+#   NC_URL=http://<server>:<port>       Adresse der Nextcloud
+#   NC_USER=<konto>                     Nextcloud-Konto
+#   NC_PASSWORT_DATEI=/config/<datei>   Datei mit dem App-Passwort des Kontos
+#   NC_ORDNER=/Shared/<ordner>          Ordner in der Nextcloud
+#   NC_ZIEL=/config/nextcloud/<ordner>  lokale Kopie im Container
+#   NC_TAKT=60                          Sekunden zwischen zwei Abgleichen
+ABGLEICH=""
+NC_KONF="$KONFIG/nextcloud-abgleich.conf"
+wert() { grep -E "^$1=" "$NC_KONF" | tail -n1 | cut -d= -f2-; }
+starte_abgleich() {
+    [ -f "$NC_KONF" ] || return 0
+    local url user pwdatei ordner ziel takt log
+    url="$(wert NC_URL)"; user="$(wert NC_USER)"; pwdatei="$(wert NC_PASSWORT_DATEI)"
+    ordner="$(wert NC_ORDNER)"; ziel="$(wert NC_ZIEL)"; takt="$(wert NC_TAKT)"
+    takt="${takt:-60}"; log="$KONFIG/nextcloud-abgleich.log"
+    if [ -z "$url" ] || [ -z "$user" ] || [ -z "$ordner" ] || [ -z "$ziel" ] || [ ! -r "$pwdatei" ]; then
+        melde "Nextcloud-Abgleich: $NC_KONF unvollstaendig oder Passwortdatei fehlt - kein Abgleich."
+        return 0
+    fi
+    if ! command -v nextcloudcmd >/dev/null 2>&1; then
+        melde "Nextcloud-Abgleich: nextcloudcmd fehlt im Image - kein Abgleich."
+        return 0
+    fi
+    mkdir -p "$ziel"
+    melde "Nextcloud-Abgleich: $ordner <-> $ziel alle ${takt} s (Log: $log)"
+    (
+        trap 'exit 0' TERM
+        while true; do
+            if nextcloudcmd --non-interactive --silent --max-sync-retries 2 \
+                    -u "$user" -p "$(cat "$pwdatei")" --path "$ordner" "$ziel" "$url" \
+                    >"$log.neu" 2>&1; then
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] ok" >>"$log.neu"
+            else
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] FEHLER (Code $?)" >>"$log.neu"
+            fi
+            mv -f "$log.neu" "$log"
+            sleep "$takt" & wait $!
+        done
+    ) &
+    ABGLEICH=$!
+}
+
 cd "$ARBEIT" || exit 1
 
 KIND=""
 beende() {
     melde "Stoppsignal - beende Claude Code."
     [ -n "$KIND" ] && kill -TERM "$KIND" 2>/dev/null
-    wait "$KIND" 2>/dev/null
+    [ -n "$ABGLEICH" ] && kill -TERM "$ABGLEICH" 2>/dev/null
+    wait 2>/dev/null
     exit 0
 }
 trap beende TERM INT
+
+starte_abgleich
 
 melde "Anmeldung gefunden, starte Remote Control (Sitzungen 'server-...')."
 

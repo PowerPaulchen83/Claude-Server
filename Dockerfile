@@ -19,6 +19,8 @@ FROM debian:stable-slim
 # python3: kleine Auswertungen, Dokument-Skills.
 # iputils-ping/dnsutils/netcat/iproute2: Netzwerk pruefen (ping, dig, nc, ip).
 # less/file/unzip: Dateien ansehen und entpacken.
+# nextcloud-desktop-cmd: nextcloudcmd, gleicht auf Wunsch einen Nextcloud-Ordner ab
+#   (nur wenn /config/nextcloud-abgleich.conf existiert, siehe README).
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         ripgrep \
@@ -36,6 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         less \
         file \
         unzip \
+        nextcloud-desktop-cmd \
     && rm -rf /var/lib/apt/lists/*
 
 # Unraid-Konvention nobody(99):users(100).
