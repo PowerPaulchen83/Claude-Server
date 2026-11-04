@@ -2,6 +2,9 @@
 
 🇬🇧 [English](CHANGELOG.md) · 🇩🇪 **Deutsch**
 
+## 2026-11-04
+- Nextcloud-Abgleich: Das App-Passwort wird nicht mehr per `-p` übergeben (war kurz in der Prozessliste sichtbar), sondern über eine private `.netrc` in einem Temp-Ordner (`nextcloudcmd -n`). Für Nutzer ändert sich nichts.
+
 ## 2026-11-03
 - Optionaler Nextcloud-Abgleich: `nextcloudcmd` ist jetzt im Image. Gibt es `/config/nextcloud-abgleich.conf`, gleicht das Startskript einen Ordner in festem Takt in beide Richtungen ab (siehe README). Ohne diese Datei ändert sich nichts.
 
