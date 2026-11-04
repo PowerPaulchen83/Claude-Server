@@ -2,6 +2,9 @@
 
 🇬🇧 **English** · 🇩🇪 [Deutsch](CHANGELOG.de.md)
 
+## 2026-11-04
+- Nextcloud sync: the app password is no longer passed with `-p` (it was briefly visible in the process list) but through a private `.netrc` in a temp folder (`nextcloudcmd -n`). Nothing changes for users.
+
 ## 2026-11-03
 - Optional Nextcloud folder sync: `nextcloudcmd` is now included in the image. If `/config/nextcloud-abgleich.conf` exists, the start script syncs one folder in both directions at a fixed interval (see README). Without that file nothing changes.
 

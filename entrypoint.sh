@@ -93,12 +93,20 @@ starte_abgleich() {
         return 0
     fi
     mkdir -p "$ziel"
+    # Das Passwort geht nicht per -p an nextcloudcmd (dann stuende es in der
+    # Prozessliste), sondern ueber eine private .netrc (-n) in einem eigenen,
+    # nur fuer den Container-Benutzer lesbaren Ordner unter /tmp.
+    local nchome host
+    nchome="$(mktemp -d)" || { melde "Nextcloud-Abgleich: kein Temp-Ordner - kein Abgleich."; return 0; }
+    host="$(printf '%s' "$url" | sed -E 's#^[A-Za-z]+://##; s#[/:].*$##')"
     melde "Nextcloud-Abgleich: $ordner <-> $ziel alle ${takt} s (Log: $log)"
     (
-        trap 'exit 0' TERM
+        trap 'rm -rf "$nchome"; exit 0' TERM
         while true; do
-            if nextcloudcmd --non-interactive --silent --max-sync-retries 2 \
-                    -u "$user" -p "$(cat "$pwdatei")" --path "$ordner" "$ziel" "$url" \
+            # bei jedem Lauf neu schreiben, damit ein neues App-Passwort ohne Neustart greift
+            ( umask 077; printf 'machine %s login %s password %s\n' "$host" "$user" "$(cat "$pwdatei")" >"$nchome/.netrc" )
+            if HOME="$nchome" nextcloudcmd --non-interactive --silent --max-sync-retries 2 \
+                    -n --path "$ordner" "$ziel" "$url" \
                     >"$log.neu" 2>&1; then
                 echo "[$(date '+%Y-%m-%d %H:%M:%S')] ok" >>"$log.neu"
             else
