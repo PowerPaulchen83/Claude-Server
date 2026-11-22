@@ -3,7 +3,7 @@
 🇬🇧 **English** · 🇩🇪 [Deutsch](CHANGELOG.de.md)
 
 ## 2026-11-23
-- New script `einrichten.sh`, called by `entrypoint.sh` on every start: it logs whether managed settings (`/etc/claude-code/managed-settings.json`, mounted **read-only** from the host) are present and warns if Claude could modify them. Creating `settings.json` moved there. Without mounted settings nothing changes.
+- New script `einrichten.sh`, called by `entrypoint.sh` on every start: it logs whether managed settings (`/etc/claude-code/managed-settings.json`, mounted **read-only** from the host) are present and warns if Claude could modify them. Creating `settings.json` moved there. New optional path "Managed settings / Zentrale Sperren" in the Unraid template (read-only), instructions in the README. Without mounted settings nothing changes.
 
 ## 2026-11-04
 - Nextcloud sync: the app password is no longer passed with `-p` (it was briefly visible in the process list) but through a private `.netrc` in a temp folder (`nextcloudcmd -n`). Nothing changes for users.

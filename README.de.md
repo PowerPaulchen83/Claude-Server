@@ -20,6 +20,7 @@ Claude Code als **Dauerdienst auf einem Unraid-Server**. Man spricht per
 - [Updates](#updates)
 - [SSH-Notschlüssel](#ssh-notschlüssel)
 - [Nextcloud-Ordner abgleichen (optional)](#nextcloud-ordner-abgleichen-optional)
+- [Zentrale Sperren (optional)](#zentrale-sperren-optional)
 - [Dateien in diesem Projekt](#dateien-in-diesem-projekt)
 - [Fehlersuche](#fehlersuche)
 
@@ -50,6 +51,7 @@ Grundsatz: **Claude darf wenig. Mehr gibt es nur, wenn der Besitzer es ausdrück
 | Ports | Keine. Remote Control baut nur eine Verbindung **nach außen** zu Anthropic auf. |
 | Zugangsdaten | Nichts davon steht im Image oder in diesem Projekt. Die Anmeldung liegt in `/config/.credentials.json`. |
 | SSH | Eigener Schlüssel pro Installation, **normalerweise nicht aktiv** (siehe [SSH-Notschlüssel](#ssh-notschlüssel)). |
+| Sperren | Auf Wunsch zentrale Sperren vom Host, **nur lesend** eingebunden: Claude kann sie selbst nicht lockern (siehe [Zentrale Sperren](#zentrale-sperren-optional)). |
 
 Zum Server-Zugriff nutzt Claude MCP-Server (z. B. einen Unraid-MCP im Nur-lesen-Modus), die in
 `/config` eingerichtet werden. Die gehören nicht zu diesem Projekt.
@@ -178,12 +180,49 @@ Geräten mit denselben Dateien. Ohne Einstellungsdatei passiert nichts.
 Die Datei wird nur gelesen, nicht ausgeführt. Bricht der Abgleich ab, läuft Claude normal weiter.
 Gelöschtes oder Überschriebenes lässt sich über Papierkorb und Versionen der Nextcloud zurückholen.
 
+## Zentrale Sperren (optional)
+
+Claude Code liest feste Regeln aus `/etc/claude-code/managed-settings.json`
+([managed settings](https://code.claude.com/docs/en/settings)). Sie gehen allen anderen
+Einstellungen vor. Liegt die Datei in `/config`, könnte Claude sie per Befehl selbst ändern.
+Deshalb kommt sie **vom Host und nur lesend** in den Container. Sie gehört nicht ins Image,
+weil jede Installation eigene Regeln braucht (welche MCP-Werkzeuge, welche Dateien).
+
+1. Auf dem Unraid einen Ordner anlegen, der dem Container **nicht** gehört, und die Datei hineinlegen:
+
+   ```
+   mkdir -p /mnt/user/appdata/claude-server-zentral
+   cp <deine-datei>.json /mnt/user/appdata/claude-server-zentral/managed-settings.json
+   chown -R root:root /mnt/user/appdata/claude-server-zentral
+   chmod 755 /mnt/user/appdata/claude-server-zentral
+   chmod 644 /mnt/user/appdata/claude-server-zentral/managed-settings.json
+   ```
+
+2. In der Unraid-Vorlage den Pfad **„Managed settings / Zentrale Sperren“** setzen:
+   Host `/mnt/user/appdata/claude-server-zentral`, Container `/etc/claude-code`, Modus **Read Only**
+   (in der Vorlage schon so voreingestellt, nur den Host-Pfad eintragen).
+3. Container neu starten. Das Log zeigt `Zentrale Sperren: … Sperren, … Nachfragen`.
+
+Beispiel für den Aufbau der Datei:
+
+```json
+{
+  "permissions": {
+    "deny": ["Read(//config/.credentials.json)", "Bash(*git push*main*)"],
+    "ask": ["CronCreate"]
+  }
+}
+```
+
+Ändern: Datei auf dem Host ersetzen, Container neu starten. Claude selbst kommt nicht heran.
+
 ## Dateien in diesem Projekt
 
 | Datei | Zweck |
 |---|---|
 | `Dockerfile` | Bauanleitung für das Image |
 | `entrypoint.sh` | Startskript: Installation, Anmeldeprüfung, Remote-Control-Schleife, Nextcloud-Abgleich |
+| `einrichten.sh` | läuft bei jedem Start: prüft die zentralen Sperren, legt `settings.json` an, falls sie fehlt (im Image als `einrichten`) |
 | `notschluessel.sh` | erzeugt bzw. zeigt den SSH-Notschlüssel (im Image als `notschluessel`) |
 | `gesund.sh` | Gesundheitsprüfung (im Image als `gesund`) |
 | `unraid/claude-server.xml` | Unraid-Vorlage mit allen Einstellungen |
@@ -200,6 +239,8 @@ Gelöschtes oder Überschriebenes lässt sich über Papierkorb und Versionen der
 | `login expired` | `docker exec -it Claude-Server claude` → `/login` |
 | `Nextcloud-Abgleich: … unvollstaendig` | `/config/nextcloud-abgleich.conf` und Passwortdatei prüfen |
 | `FEHLER` in `nextcloud-abgleich.log` | Adresse, Konto, App-Passwort und Freigabe des Ordners prüfen; die Zeilen darüber nennen den Grund |
+| `Hinweis: keine gueltigen zentralen Sperren` | keine Sperren eingebunden (in Ordnung, wenn gewollt) oder die Datei ist kein gültiges JSON |
+| `WARNUNG: … ist fuer Claude beschreibbar` | Pfad in der Vorlage auf **Read Only** stellen, Datei muss `root` gehören |
 | `Remote Control beendet … Neustart in 60 s` | meist kurz kein Netz, er startet von selbst neu |
 | Docker-Tab zeigt *unhealthy* | `docker exec Claude-Server gesund` aufrufen: `nicht angemeldet` = [Erste Anmeldung](#erste-anmeldung) durchführen; `Remote Control laeuft nicht` = Log ansehen |
 | Unraid zeigt bei Update „not available“ | Ist das GitHub-Paket öffentlich? (GitHub → Packages → claude-server → Package settings) |
