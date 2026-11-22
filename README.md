@@ -233,7 +233,7 @@ Example of the file layout (adapt it to your own system):
 - `//config/…` is an absolute path inside the container.
 - Replace `mcp__<your-mcp>__…` with the tool names of your own MCP servers
   (server name from `claude mcp list`, tool names via `/mcp` in Claude).
-- Rule syntax: [permissions in the Claude Code docs](https://code.claude.com/docs/en/iam).
+- Rule syntax: [permissions in the Claude Code docs](https://code.claude.com/docs/en/settings).
 
 To change it: replace the file on the host and restart the container. Claude itself cannot reach it.
 

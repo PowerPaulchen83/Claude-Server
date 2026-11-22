@@ -230,7 +230,7 @@ Beispiel für den Aufbau der Datei (an das eigene System anpassen):
 - `//config/…` ist ein absoluter Pfad im Container.
 - `mcp__<dein-mcp>__…` durch die Werkzeugnamen der eigenen MCP-Server ersetzen
   (Servername aus `claude mcp list`, Werkzeugnamen zeigt Claude mit `/mcp`).
-- Schreibweise der Regeln: [Berechtigungen in der Claude-Code-Doku](https://code.claude.com/docs/en/iam).
+- Schreibweise der Regeln: [Berechtigungen in der Claude-Code-Doku](https://code.claude.com/docs/en/settings).
 
 Ändern: Datei auf dem Host ersetzen, Container neu starten. Claude selbst kommt nicht heran.
 
