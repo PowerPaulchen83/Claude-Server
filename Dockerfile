@@ -59,7 +59,6 @@ COPY gesund.sh /usr/local/bin/gesund
 COPY einrichten.sh /usr/local/bin/einrichten
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/notschluessel /usr/local/bin/gesund /usr/local/bin/einrichten
 
-
 # Unraid zeigt damit "healthy"/"unhealthy" im Docker-Tab.
 # start-period: Zeit fuer die Erstinstallation von Claude beim allerersten Start.
 HEALTHCHECK --interval=60s --timeout=10s --start-period=5m --retries=3 \
