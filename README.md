@@ -195,7 +195,7 @@ installation needs its own rules (which MCP tools, which files).
 
    ```
    mkdir -p /mnt/user/appdata/claude-server-zentral
-   cp <your-file>.json /mnt/user/appdata/claude-server-zentral/managed-settings.json
+   cp <your-rules>.json /mnt/user/appdata/claude-server-zentral/managed-settings.json
    chown -R root:root /mnt/user/appdata/claude-server-zentral
    chmod 755 /mnt/user/appdata/claude-server-zentral
    chmod 644 /mnt/user/appdata/claude-server-zentral/managed-settings.json
@@ -206,16 +206,34 @@ installation needs its own rules (which MCP tools, which files).
    (already preset in the template, just enter the host path).
 3. Restart the container. The log shows `Zentrale Sperren: … Sperren, … Nachfragen` (… denied, … ask).
 
-Example of the file layout:
+Example of the file layout (adapt it to your own system):
 
 ```json
 {
   "permissions": {
-    "deny": ["Read(//config/.credentials.json)", "Bash(*git push*main*)"],
-    "ask": ["CronCreate"]
+    "deny": [
+      "Read(//config/.credentials.json)",
+      "Read(//config/.claude.json)",
+      "Edit(//config/settings.json)",
+      "Read(//config/.ssh/**)",
+      "Bash(rm -rf*)",
+      "Bash(*git push*main*)",
+      "Bash(*gh pr merge*)",
+      "mcp__<your-mcp>__delete_<something>"
+    ],
+    "ask": [
+      "CronCreate",
+      "mcp__<your-mcp>__update_<something>"
+    ]
   }
 }
 ```
+
+- `deny` = always blocked, `ask` = only after confirming on the phone.
+- `//config/…` is an absolute path inside the container.
+- Replace `mcp__<your-mcp>__…` with the tool names of your own MCP servers
+  (server name from `claude mcp list`, tool names via `/mcp` in Claude).
+- Rule syntax: [permissions in the Claude Code docs](https://code.claude.com/docs/en/iam).
 
 To change it: replace the file on the host and restart the container. Claude itself cannot reach it.
 

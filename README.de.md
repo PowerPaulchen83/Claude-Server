@@ -192,7 +192,7 @@ weil jede Installation eigene Regeln braucht (welche MCP-Werkzeuge, welche Datei
 
    ```
    mkdir -p /mnt/user/appdata/claude-server-zentral
-   cp <deine-datei>.json /mnt/user/appdata/claude-server-zentral/managed-settings.json
+   cp <deine-sperren>.json /mnt/user/appdata/claude-server-zentral/managed-settings.json
    chown -R root:root /mnt/user/appdata/claude-server-zentral
    chmod 755 /mnt/user/appdata/claude-server-zentral
    chmod 644 /mnt/user/appdata/claude-server-zentral/managed-settings.json
@@ -203,16 +203,34 @@ weil jede Installation eigene Regeln braucht (welche MCP-Werkzeuge, welche Datei
    (in der Vorlage schon so voreingestellt, nur den Host-Pfad eintragen).
 3. Container neu starten. Das Log zeigt `Zentrale Sperren: … Sperren, … Nachfragen`.
 
-Beispiel für den Aufbau der Datei:
+Beispiel für den Aufbau der Datei (an das eigene System anpassen):
 
 ```json
 {
   "permissions": {
-    "deny": ["Read(//config/.credentials.json)", "Bash(*git push*main*)"],
-    "ask": ["CronCreate"]
+    "deny": [
+      "Read(//config/.credentials.json)",
+      "Read(//config/.claude.json)",
+      "Edit(//config/settings.json)",
+      "Read(//config/.ssh/**)",
+      "Bash(rm -rf*)",
+      "Bash(*git push*main*)",
+      "Bash(*gh pr merge*)",
+      "mcp__<dein-mcp>__delete_<etwas>"
+    ],
+    "ask": [
+      "CronCreate",
+      "mcp__<dein-mcp>__update_<etwas>"
+    ]
   }
 }
 ```
+
+- `deny` = immer verboten, `ask` = nur nach Rückfrage am Handy.
+- `//config/…` ist ein absoluter Pfad im Container.
+- `mcp__<dein-mcp>__…` durch die Werkzeugnamen der eigenen MCP-Server ersetzen
+  (Servername aus `claude mcp list`, Werkzeugnamen zeigt Claude mit `/mcp`).
+- Schreibweise der Regeln: [Berechtigungen in der Claude-Code-Doku](https://code.claude.com/docs/en/iam).
 
 Ändern: Datei auf dem Host ersetzen, Container neu starten. Claude selbst kommt nicht heran.
 
