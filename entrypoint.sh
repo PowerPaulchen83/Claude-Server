@@ -40,17 +40,8 @@ if ! command -v claude >/dev/null 2>&1; then
 fi
 melde "Claude Code   : $(claude --version 2>/dev/null || echo unbekannt)"
 
-# Einstellungen nur anlegen, wenn keine da sind (eigene Aenderungen bleiben).
-# Kein autoMemoryDirectory: Das Gedaechtnis bleibt in /config, nur fuer
-# diesen Container - nicht geteilt mit PC oder Laptop.
-if [ ! -f "$KONFIG/settings.json" ]; then
-    cat > "$KONFIG/settings.json" <<'JSON'
-{
-  "language": "german"
-}
-JSON
-    melde "settings.json angelegt (Sprache deutsch, eigenes Gedaechtnis)"
-fi
+# Einrichtung: zentrale Sperren pruefen, settings.json anlegen falls sie fehlt.
+/usr/local/bin/einrichten
 
 # 1. Anmeldung vorhanden?
 if [ ! -f "$KONFIG/.credentials.json" ]; then

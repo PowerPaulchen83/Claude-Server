@@ -2,6 +2,9 @@
 
 🇬🇧 [English](CHANGELOG.md) · 🇩🇪 **Deutsch**
 
+## 2026-11-23
+- Neues Skript `einrichten.sh`, das `entrypoint.sh` bei jedem Start aufruft: Es meldet im Log, ob zentrale Sperren (`/etc/claude-code/managed-settings.json`, vom Host **nur lesend** eingebunden) da sind, und warnt, wenn Claude sie ändern könnte. Das Anlegen der `settings.json` ist dorthin umgezogen. Neuer optionaler Pfad „Managed settings / Zentrale Sperren“ in der Unraid-Vorlage (nur lesend), Anleitung im README. Ohne eingebundene Sperren ändert sich nichts.
+
 ## 2026-11-04
 - Nextcloud-Abgleich: Das App-Passwort wird nicht mehr per `-p` übergeben (war kurz in der Prozessliste sichtbar), sondern über eine private `.netrc` in einem Temp-Ordner (`nextcloudcmd -n`). Für Nutzer ändert sich nichts.
 

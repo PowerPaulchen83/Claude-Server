@@ -23,6 +23,7 @@ Claude Code as an **always-on service on an Unraid server**. You talk to it via
 - [Updates](#updates)
 - [SSH emergency key](#ssh-emergency-key)
 - [Sync a Nextcloud folder (optional)](#sync-a-nextcloud-folder-optional)
+- [Managed settings (optional)](#managed-settings-optional)
 - [Files in this project](#files-in-this-project)
 - [Troubleshooting](#troubleshooting)
 
@@ -53,6 +54,7 @@ Principle: **Claude may do little. More is only possible when the owner explicit
 | Ports | None. Remote Control only opens an **outbound** connection to Anthropic. |
 | Credentials | None of them are in the image or in this project. The login is stored in `/config/.credentials.json`. |
 | SSH | Own key per installation, **normally not active** (see [SSH emergency key](#ssh-emergency-key)). |
+| Restrictions | Optional managed settings from the host, mounted **read-only**: Claude cannot loosen them itself (see [Managed settings](#managed-settings-optional)). |
 
 For server access Claude uses MCP servers (e.g. an Unraid MCP in read-only mode) that are
 configured in `/config`. They are not part of this project.
@@ -181,12 +183,67 @@ same files. Without a settings file nothing happens.
 The file is only read, never executed. If the sync fails, Claude keeps running normally.
 Deleted or overwritten files can be restored from the Nextcloud trash bin and versions.
 
+## Managed settings (optional)
+
+Claude Code reads fixed rules from `/etc/claude-code/managed-settings.json`
+([managed settings](https://code.claude.com/docs/en/settings)). They take precedence over all
+other settings. If the file lived in `/config`, Claude could change it with a shell command.
+That is why it comes **from the host, read-only**. It is not part of the image, because every
+installation needs its own rules (which MCP tools, which files).
+
+1. On Unraid, create a folder that the container does **not** own and put the file there:
+
+   ```
+   mkdir -p /mnt/user/appdata/claude-server-zentral
+   cp <your-rules>.json /mnt/user/appdata/claude-server-zentral/managed-settings.json
+   chown -R root:root /mnt/user/appdata/claude-server-zentral
+   chmod 755 /mnt/user/appdata/claude-server-zentral
+   chmod 644 /mnt/user/appdata/claude-server-zentral/managed-settings.json
+   ```
+
+2. In the Unraid template, set the path **"Managed settings / Zentrale Sperren"**:
+   host `/mnt/user/appdata/claude-server-zentral`, container `/etc/claude-code`, mode **Read Only**
+   (already preset in the template, just enter the host path).
+3. Restart the container. The log shows `Zentrale Sperren: … Sperren, … Nachfragen` (… denied, … ask).
+
+Example of the file layout (adapt it to your own system):
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(//config/.credentials.json)",
+      "Read(//config/.claude.json)",
+      "Edit(//config/settings.json)",
+      "Read(//config/.ssh/**)",
+      "Bash(rm -rf*)",
+      "Bash(*git push*main*)",
+      "Bash(*gh pr merge*)",
+      "mcp__<your-mcp>__delete_<something>"
+    ],
+    "ask": [
+      "CronCreate",
+      "mcp__<your-mcp>__update_<something>"
+    ]
+  }
+}
+```
+
+- `deny` = always blocked, `ask` = only after confirming on the phone.
+- `//config/…` is an absolute path inside the container.
+- Replace `mcp__<your-mcp>__…` with the tool names of your own MCP servers
+  (server name from `claude mcp list`, tool names via `/mcp` in Claude).
+- Rule syntax: [permissions in the Claude Code docs](https://code.claude.com/docs/en/settings).
+
+To change it: replace the file on the host and restart the container. Claude itself cannot reach it.
+
 ## Files in this project
 
 | File | Purpose |
 |---|---|
 | `Dockerfile` | build instructions for the image |
 | `entrypoint.sh` | start script: installation, login check, Remote Control loop, Nextcloud sync |
+| `einrichten.sh` | runs on every start: checks the managed settings, creates `settings.json` if missing (in the image as `einrichten`) |
 | `notschluessel.sh` | creates/shows the SSH emergency key (in the image as `notschluessel`) |
 | `gesund.sh` | health check (in the image as `gesund`) |
 | `unraid/claude-server.xml` | Unraid template with all settings |
@@ -203,6 +260,8 @@ Deleted or overwritten files can be restored from the Nextcloud trash bin and ve
 | `login expired` | `docker exec -it Claude-Server claude` → `/login` |
 | `Nextcloud-Abgleich: … unvollstaendig` | check `/config/nextcloud-abgleich.conf` and the password file |
 | `FEHLER` in `nextcloud-abgleich.log` | check address, account, app password and folder share; the lines above give the reason |
+| `Hinweis: keine gueltigen zentralen Sperren` (no valid managed settings) | none mounted (fine if intended) or the file is not valid JSON |
+| `WARNUNG: … ist fuer Claude beschreibbar` (writable by Claude) | set the template path to **Read Only**; the file must be owned by `root` |
 | `Remote Control beendet … Neustart in 60 s` (ended, restart in 60 s) | usually a short network outage; it restarts by itself |
 | Docker tab shows *unhealthy* | Run `docker exec Claude-Server gesund`: `nicht angemeldet` = do the [first login](#first-login); `Remote Control laeuft nicht` = check the log |
 | Unraid shows „not available“ for updates | Is the GitHub package public? (GitHub → Packages → claude-server → Package settings) |
